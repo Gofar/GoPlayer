@@ -1,6 +1,9 @@
 package com.gofar.goplayer;
 
+import android.content.Intent;
+import android.database.Cursor;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
 import android.support.design.widget.Snackbar;
@@ -8,17 +11,18 @@ import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.DividerItemDecoration;
+import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 
-import com.google.gson.stream.JsonReader;
+import com.chad.library.adapter.base.BaseQuickAdapter;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.List;
 
 import ezy.ui.layout.LoadingLayout;
 
@@ -27,6 +31,7 @@ public class MainActivity extends AppCompatActivity
 
     private LoadingLayout mLoadingLayout;
     private RecyclerView mRecyclerView;
+    private VideoAdapter mVideoAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -55,6 +60,21 @@ public class MainActivity extends AppCompatActivity
 
         mLoadingLayout = findViewById(R.id.loading_layout);
         mRecyclerView = findViewById(R.id.rv);
+        mRecyclerView.setLayoutManager(new LinearLayoutManager(this));
+        mRecyclerView.addItemDecoration(new DividerItemDecoration(this, DividerItemDecoration.VERTICAL));
+        mVideoAdapter = new VideoAdapter(new ArrayList<Video>());
+        mRecyclerView.setAdapter(mVideoAdapter);
+        mVideoAdapter.setOnItemClickListener(new BaseQuickAdapter.OnItemClickListener() {
+            @Override
+            public void onItemClick(BaseQuickAdapter adapter, View view, int position) {
+                Video video=mVideoAdapter.getData().get(position);
+                Intent intent=new Intent(MainActivity.this,PlayerActivity.class);
+                intent.putExtra("data",video);
+                startActivity(intent);
+            }
+        });
+
+        init();
     }
 
     @Override
@@ -114,22 +134,50 @@ public class MainActivity extends AppCompatActivity
         return true;
     }
 
-    private void initData() {
+    private void init() {
+        mVideoAdapter.setNewData(getVideos());
+        mLoadingLayout.showContent();
+    }
+
+    private List<Video> getVideos() {
+        String[] thumbColumns = {MediaStore.Video.Thumbnails.DATA,
+                MediaStore.Video.Thumbnails.VIDEO_ID};
+        List<Video> videoList = new ArrayList<>();
+        Cursor cursor = null;
         try {
-            InputStream is = getAssets().open("media.exolist.json");
-            JsonReader jsonReader = new JsonReader(new InputStreamReader(is));
-//            new GsonBuilder().registerTypeAdapter(Simple.class, new JsonDeserializer<UriSimple>() {
-//                @Override
-//                public UriSimple deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
-//                    JsonObject jsonObject=json.getAsJsonObject();
-//                    return ;
-//                }
-//            }).registerTypeAdapter()
-//                    .create();
-//            List<SimpleGroup> simpleGroupList = gson.fromJson(jsonReader, new TypeToken<List<SimpleGroup>>() {
-//            }.getType());
-        } catch (IOException e) {
+            cursor = getContentResolver().query(MediaStore.Video.Media.EXTERNAL_CONTENT_URI, null, null, null, MediaStore.Video.Media.DISPLAY_NAME);
+            while (cursor.moveToNext()) {
+                int id = cursor.getInt(cursor.getColumnIndexOrThrow(MediaStore.Video.Media._ID));
+                String path = cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Video.Media.DATA));
+                String name = cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Video.Media.DISPLAY_NAME));
+                String resolution = cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Video.Media.RESOLUTION));
+                long size = cursor.getLong(cursor.getColumnIndexOrThrow(MediaStore.Video.Media.SIZE));
+                long duration = cursor.getLong(cursor.getColumnIndexOrThrow(MediaStore.Video.Media.DURATION));
+                long width = cursor.getLong(cursor.getColumnIndexOrThrow(MediaStore.Video.Media.WIDTH));
+                long height = cursor.getLong(cursor.getColumnIndexOrThrow(MediaStore.Video.Media.HEIGHT));
+
+                // 根据视频id读取缩略图
+                String thumbnail = null;
+                Cursor thumbCursor = getContentResolver().query(
+                        MediaStore.Video.Thumbnails.EXTERNAL_CONTENT_URI,
+                        thumbColumns, MediaStore.Video.Thumbnails.VIDEO_ID
+                                + "=" + id, null, null);
+                if (thumbCursor.moveToFirst()) {
+                    thumbnail = thumbCursor.getString(thumbCursor
+                            .getColumnIndex(MediaStore.Video.Thumbnails.DATA));
+                }
+                thumbCursor.close();
+
+                Video video = new Video(id, name, path, resolution, thumbnail, width, height, size, duration);
+                videoList.add(video);
+            }
+        } catch (Exception e) {
             e.printStackTrace();
+        } finally {
+            if (cursor != null) {
+                cursor.close();
+            }
         }
+        return videoList;
     }
 }
