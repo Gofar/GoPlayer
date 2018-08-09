@@ -26,6 +26,9 @@ import java.util.List;
 
 import ezy.ui.layout.LoadingLayout;
 
+/**
+ * @author lcf
+ */
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
 
