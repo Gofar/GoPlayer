@@ -22,6 +22,9 @@
             </intent-filter>
         </activity>
         <activity android:name=".PlayerActivity" />
+        <activity android:name=".PlayDetailsActivity"
+            android:screenOrientation="portrait"
+            android:configChanges="orientation|keyboardHidden|screenSize"/>
     </application>
 
 </manifest>
