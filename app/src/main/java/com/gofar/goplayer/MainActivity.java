@@ -71,7 +71,7 @@ public class MainActivity extends AppCompatActivity
             @Override
             public void onItemClick(BaseQuickAdapter adapter, View view, int position) {
                 Video video=mVideoAdapter.getData().get(position);
-                Intent intent=new Intent(MainActivity.this,PlayDetailsActivity.class);
+                Intent intent=new Intent(MainActivity.this,PlayActivity.class);
                 intent.putExtra("data",video);
                 startActivity(intent);
             }

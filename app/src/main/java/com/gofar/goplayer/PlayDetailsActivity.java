@@ -40,16 +40,20 @@ public class PlayDetailsActivity extends AppCompatActivity {
     private PlayerView mPlayerView;
     private ImageView mIvFullscreen;
     private FrameLayout mFlPlayer;
+    private FrameLayout mFlPlayerContent;
     private SimpleExoPlayer mPlayer;
     private LinearLayout mLlContent;
     private MediaSource mMediaSource;
     private Video mVideo;
 
+    private int mShowFlags;
+
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_play_details);
+        mShowFlags=getWindow().getDecorView().getSystemUiVisibility();
 
+        setContentView(R.layout.activity_play_details);
         mVideo = getIntent().getParcelableExtra("data");
         if (mVideo == null) {
             return;
@@ -60,6 +64,7 @@ public class PlayDetailsActivity extends AppCompatActivity {
         mIvFullscreen = findViewById(R.id.iv_fullscreen);
         mFlPlayer = findViewById(R.id.fl_player);
         mLlContent = findViewById(R.id.ll_content);
+        mFlPlayerContent = findViewById(R.id.fl_player_content);
 
         setSupportActionBar(mToolbar);
         setOrientationParams(false);
@@ -69,8 +74,10 @@ public class PlayDetailsActivity extends AppCompatActivity {
             public void onClick(View v) {
                 if (getRequestedOrientation() == ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE) {
                     setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_USER_PORTRAIT);
+                    //exitFullScreen();
                 } else {
                     setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
+                    //enterFullScreen();
                 }
             }
         });
@@ -88,7 +95,7 @@ public class PlayDetailsActivity extends AppCompatActivity {
                     | View.SYSTEM_UI_FLAG_FULLSCREEN
                     | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
         } else {
-            getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_STABLE);
+            getWindow().getDecorView().setSystemUiVisibility(mShowFlags);
         }
     }
 
@@ -108,7 +115,7 @@ public class PlayDetailsActivity extends AppCompatActivity {
             mPlayer = ExoPlayerFactory.newSimpleInstance(renderersFactory, trackSelector, loadControl);
             mPlayerView.setPlayer(mPlayer);
             DataSource.Factory dataSourceFactory = new DefaultDataSourceFactory(this,
-                    Util.getUserAgent(this, "com.gofar.goplayer"));
+                    Util.getUserAgent(this, BuildConfig.APPLICATION_ID));
             mMediaSource = new ExtractorMediaSource.Factory(dataSourceFactory).createMediaSource(Uri.parse(mVideo.getPath()));
         }
         mPlayer.prepare(mMediaSource);
@@ -132,6 +139,28 @@ public class PlayDetailsActivity extends AppCompatActivity {
             mFlPlayer.setLayoutParams(lp);
             mFlPlayer.requestFocus();
         }
+    }
+
+    private void enterFullScreen() {
+        mToolbar.setVisibility(View.GONE);
+        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
+        ViewGroup contentView = findViewById(android.R.id.content);
+        mFlPlayer.removeView(mFlPlayerContent);
+        ViewGroup.LayoutParams lp = new ViewGroup.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.MATCH_PARENT);
+        contentView.addView(mFlPlayerContent,lp);
+    }
+
+    private void exitFullScreen(){
+        mToolbar.setVisibility(View.VISIBLE);
+        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+        ViewGroup contentView = findViewById(android.R.id.content);
+        contentView.removeView(mFlPlayerContent);
+        ViewGroup.LayoutParams lp = new ViewGroup.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.MATCH_PARENT);
+        mFlPlayer.addView(mFlPlayerContent,lp);
     }
 
     private void releasePlayer() {
