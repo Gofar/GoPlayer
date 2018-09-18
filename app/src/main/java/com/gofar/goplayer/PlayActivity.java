@@ -8,12 +8,14 @@ import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.view.Gravity;
 import android.view.Surface;
 import android.view.TextureView;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 
 import com.google.android.exoplayer2.DefaultLoadControl;
 import com.google.android.exoplayer2.DefaultRenderersFactory;
@@ -85,6 +87,27 @@ public class PlayActivity extends AppCompatActivity implements TextureView.Surfa
                 }
             }
         });
+        FrameLayout.LayoutParams lp1 = new FrameLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT);
+        lp1.gravity = Gravity.BOTTOM | Gravity.RIGHT;
+        mContainer.addView(imageButton, lp1);
+
+
+        ImageView ivPlayer = new ImageView(this);
+        ivPlayer.setImageResource(R.drawable.ic_play_circle_filled_black_24dp);
+        ivPlayer.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (mPlayer != null) {
+                    mPlayer.setPlayWhenReady(true);
+                    v.setVisibility(View.GONE);
+                }
+            }
+        });
+        FrameLayout.LayoutParams lp2 = new FrameLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT);
+        lp2.gravity = Gravity.CENTER;
+        mContainer.addView(ivPlayer, lp2);
     }
 
 
@@ -173,6 +196,7 @@ public class PlayActivity extends AppCompatActivity implements TextureView.Surfa
     }
 
     private void openMediaPlayer() {
+        mContainer.setKeepScreenOn(true);
         if (mSurface == null) {
             mSurface = new Surface(mSurfaceTexture);
         }
