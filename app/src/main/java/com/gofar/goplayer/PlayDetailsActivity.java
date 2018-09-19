@@ -3,13 +3,13 @@ package com.gofar.goplayer;
 import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.WindowManager;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -51,7 +51,7 @@ public class PlayDetailsActivity extends AppCompatActivity {
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        mShowFlags=getWindow().getDecorView().getSystemUiVisibility();
+        mShowFlags = getWindow().getDecorView().getSystemUiVisibility();
 
         setContentView(R.layout.activity_play_details);
         mVideo = getIntent().getParcelableExtra("data");
@@ -83,21 +83,21 @@ public class PlayDetailsActivity extends AppCompatActivity {
         });
     }
 
-    @Override
-    public void onWindowFocusChanged(boolean hasFocus) {
-        super.onWindowFocusChanged(hasFocus);
-        if (hasFocus && getRequestedOrientation() == ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
-                && Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-            getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-                    | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-                    | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-                    | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
-                    | View.SYSTEM_UI_FLAG_FULLSCREEN
-                    | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
-        } else {
-            getWindow().getDecorView().setSystemUiVisibility(mShowFlags);
-        }
-    }
+//    @Override
+//    public void onWindowFocusChanged(boolean hasFocus) {
+//        super.onWindowFocusChanged(hasFocus);
+//        if (hasFocus && getRequestedOrientation() == ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+//                && Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+//            getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+//                    | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+//                    | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+//                    | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+//                    | View.SYSTEM_UI_FLAG_FULLSCREEN
+//                    | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
+//        } else {
+//            getWindow().getDecorView().setSystemUiVisibility(mShowFlags);
+//        }
+//    }
 
     @Override
     public void onConfigurationChanged(Configuration newConfig) {
@@ -139,6 +139,30 @@ public class PlayDetailsActivity extends AppCompatActivity {
             mFlPlayer.setLayoutParams(lp);
             mFlPlayer.requestFocus();
         }
+        setUIFlags(isLandscape);
+    }
+
+    private void setUIFlags(boolean isLandscape) {
+        if (isLandscape) {
+            //全屏
+//            getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LOW_PROFILE
+//                    | View.SYSTEM_UI_FLAG_FULLSCREEN
+//                    | View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+//                    | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+//                    | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+//                    | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+//                    | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION);
+            getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
+                    WindowManager.LayoutParams.FLAG_FULLSCREEN);
+        } else {
+            //非全屏
+//            getWindow().getDecorView().setSystemUiVisibility(
+//                    View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+//                            | View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+//                            | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+//            );
+            getWindow().clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
+        }
     }
 
     private void enterFullScreen() {
@@ -149,10 +173,10 @@ public class PlayDetailsActivity extends AppCompatActivity {
         ViewGroup.LayoutParams lp = new ViewGroup.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.MATCH_PARENT);
-        contentView.addView(mFlPlayerContent,lp);
+        contentView.addView(mFlPlayerContent, lp);
     }
 
-    private void exitFullScreen(){
+    private void exitFullScreen() {
         mToolbar.setVisibility(View.VISIBLE);
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
         ViewGroup contentView = findViewById(android.R.id.content);
@@ -160,7 +184,7 @@ public class PlayDetailsActivity extends AppCompatActivity {
         ViewGroup.LayoutParams lp = new ViewGroup.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.MATCH_PARENT);
-        mFlPlayer.addView(mFlPlayerContent,lp);
+        mFlPlayer.addView(mFlPlayerContent, lp);
     }
 
     private void releasePlayer() {
