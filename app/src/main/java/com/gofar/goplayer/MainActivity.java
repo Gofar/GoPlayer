@@ -72,7 +72,7 @@ public class MainActivity extends AppCompatActivity
             public void onItemClick(BaseQuickAdapter adapter, View view, int position) {
                 Video video = mVideoAdapter.getData().get(position);
                 Intent intent;
-                if (position % 2 == 1) {
+                if (position % 2 == 0) {
                     intent = new Intent(MainActivity.this, PlayActivity.class);
                 } else {
                     intent = new Intent(MainActivity.this, PlayDetailsActivity.class);

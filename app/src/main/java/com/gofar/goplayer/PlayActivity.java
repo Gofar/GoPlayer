@@ -46,7 +46,8 @@ public class PlayActivity extends AppCompatActivity implements TextureView.Surfa
     private TextureView mTextureView;
     private Surface mSurface;
     private SurfaceTexture mSurfaceTexture;
-    private FrameLayout mContainer;
+    private FrameLayout mPortraitContainer;
+    private FrameLayout mLandScapeContainer;
     private SimpleExoPlayer mPlayer;
     private MediaSource mMediaSource;
     private Video mVideo;
@@ -70,10 +71,11 @@ public class PlayActivity extends AppCompatActivity implements TextureView.Surfa
     }
 
     private void init() {
-        mContainer = new FrameLayout(this);
+        mPortraitContainer = new FrameLayout(this);
+        mPortraitContainer.setBackgroundColor(Color.BLACK);
         FrameLayout.LayoutParams lp = new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.MATCH_PARENT);
-        mFlPlayer.addView(mContainer, lp);
+        mFlPlayer.addView(mPortraitContainer, lp);
 
         ImageButton imageButton = new ImageButton(this);
         imageButton.setImageResource(R.drawable.ic_fullscreen_white_24dp);
@@ -90,7 +92,7 @@ public class PlayActivity extends AppCompatActivity implements TextureView.Surfa
         FrameLayout.LayoutParams lp1 = new FrameLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT);
         lp1.gravity = Gravity.BOTTOM | Gravity.RIGHT;
-        mContainer.addView(imageButton, lp1);
+        mPortraitContainer.addView(imageButton, lp1);
 
 
         ImageView ivPlayer = new ImageView(this);
@@ -107,7 +109,7 @@ public class PlayActivity extends AppCompatActivity implements TextureView.Surfa
         FrameLayout.LayoutParams lp2 = new FrameLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT);
         lp2.gravity = Gravity.CENTER;
-        mContainer.addView(ivPlayer, lp2);
+        mFlPlayer.addView(ivPlayer, lp2);
     }
 
 
@@ -150,10 +152,10 @@ public class PlayActivity extends AppCompatActivity implements TextureView.Surfa
             mTextureView = new TextureView(this);
             mTextureView.setSurfaceTextureListener(this);
         }
-        mContainer.removeView(mTextureView);
+        mPortraitContainer.removeView(mTextureView);
         FrameLayout.LayoutParams lp = new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT
                 , ViewGroup.LayoutParams.MATCH_PARENT);
-        mContainer.addView(mTextureView, 0, lp);
+        mPortraitContainer.addView(mTextureView, 0, lp);
     }
 
     private void initializePlayer() {
@@ -196,7 +198,7 @@ public class PlayActivity extends AppCompatActivity implements TextureView.Surfa
     }
 
     private void openMediaPlayer() {
-        mContainer.setKeepScreenOn(true);
+        mPortraitContainer.setKeepScreenOn(true);
         if (mSurface == null) {
             mSurface = new Surface(mSurfaceTexture);
         }
@@ -221,10 +223,41 @@ public class PlayActivity extends AppCompatActivity implements TextureView.Surfa
         mToolbar.setVisibility(View.GONE);
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
         ViewGroup contentView = findViewById(android.R.id.content);
-        mFlPlayer.removeView(mContainer);
+        mPortraitContainer.removeView(mTextureView);
+        mFlPlayer.removeView(mPortraitContainer);
+        if (mLandScapeContainer == null) {
+            mLandScapeContainer = new FrameLayout(this);
+            mLandScapeContainer.setBackgroundColor(Color.BLACK);
+            ImageButton imageButton = new ImageButton(this);
+            imageButton.setImageResource(R.drawable.ic_fullscreen_white_24dp);
+            imageButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    if (mMode == MODE_FULL_SCREEN) {
+                        exitFullScreen();
+                    } else {
+                        enterFullScreen();
+                    }
+                }
+            });
+            FrameLayout.LayoutParams lp = new FrameLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT,
+                    ViewGroup.LayoutParams.WRAP_CONTENT);
+            lp.gravity = Gravity.BOTTOM | Gravity.RIGHT;
+            mLandScapeContainer.addView(imageButton, lp);
+        }
+        mLandScapeContainer.setSystemUiVisibility(
+                View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+                        | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                        | View.SYSTEM_UI_FLAG_FULLSCREEN
+                        | View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                        | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                        | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+        );
+        mLandScapeContainer.setKeepScreenOn(true);
         ViewGroup.LayoutParams lp = new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.MATCH_PARENT);
-        contentView.addView(mContainer, lp);
+        mLandScapeContainer.addView(mTextureView, 0, lp);
+        contentView.addView(mLandScapeContainer, lp);
         mMode = MODE_FULL_SCREEN;
     }
 
@@ -232,10 +265,12 @@ public class PlayActivity extends AppCompatActivity implements TextureView.Surfa
         mToolbar.setVisibility(View.VISIBLE);
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
         ViewGroup contentView = findViewById(android.R.id.content);
-        contentView.removeView(mContainer);
+        mLandScapeContainer.removeView(mTextureView);
+        contentView.removeView(mLandScapeContainer);
         ViewGroup.LayoutParams lp = new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.MATCH_PARENT);
-        mFlPlayer.addView(mContainer, lp);
+        mPortraitContainer.addView(mTextureView, 0, lp);
+        mFlPlayer.addView(mPortraitContainer, lp);
         mMode = MODE_NORMAL;
     }
 }
