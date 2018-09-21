@@ -31,19 +31,21 @@ import com.google.android.exoplayer2.upstream.DataSource;
 import com.google.android.exoplayer2.upstream.DefaultBandwidthMeter;
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory;
 import com.google.android.exoplayer2.util.Util;
+import com.google.android.exoplayer2.video.VideoListener;
 
 /**
  * @author lcf
  * @date 17/9/2018 下午 3:32
  * @since 1.0
  */
-public class PlayActivity extends AppCompatActivity implements TextureView.SurfaceTextureListener {
+public class PlayActivity extends AppCompatActivity implements TextureView.SurfaceTextureListener
+        , VideoListener {
     private static final int MODE_NORMAL = 0;
     private static final int MODE_FULL_SCREEN = 1;
 
     private Toolbar mToolbar;
     private FrameLayout mFlPlayer;
-    private TextureView mTextureView;
+    private GoTextureView mTextureView;
     private Surface mSurface;
     private SurfaceTexture mSurfaceTexture;
     private FrameLayout mPortraitContainer;
@@ -149,12 +151,12 @@ public class PlayActivity extends AppCompatActivity implements TextureView.Surfa
 
     private void addTextureView() {
         if (mTextureView == null) {
-            mTextureView = new TextureView(this);
+            mTextureView = new GoTextureView(this);
             mTextureView.setSurfaceTextureListener(this);
         }
         mPortraitContainer.removeView(mTextureView);
         FrameLayout.LayoutParams lp = new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT
-                , ViewGroup.LayoutParams.MATCH_PARENT);
+                , ViewGroup.LayoutParams.MATCH_PARENT, Gravity.CENTER);
         mPortraitContainer.addView(mTextureView, 0, lp);
     }
 
@@ -169,6 +171,7 @@ public class PlayActivity extends AppCompatActivity implements TextureView.Surfa
             DataSource.Factory dataSourceFactory = new DefaultDataSourceFactory(this,
                     Util.getUserAgent(this, BuildConfig.APPLICATION_ID));
             mMediaSource = new ExtractorMediaSource.Factory(dataSourceFactory).createMediaSource(Uri.parse(mVideo.getPath()));
+            mPlayer.addVideoListener(this);
         }
     }
 
@@ -254,8 +257,8 @@ public class PlayActivity extends AppCompatActivity implements TextureView.Surfa
                         | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
         );
         mLandScapeContainer.setKeepScreenOn(true);
-        ViewGroup.LayoutParams lp = new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.MATCH_PARENT);
+        FrameLayout.LayoutParams lp = new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
+                FrameLayout.LayoutParams.MATCH_PARENT, Gravity.CENTER);
         mLandScapeContainer.addView(mTextureView, 0, lp);
         contentView.addView(mLandScapeContainer, lp);
         mMode = MODE_FULL_SCREEN;
@@ -267,10 +270,27 @@ public class PlayActivity extends AppCompatActivity implements TextureView.Surfa
         ViewGroup contentView = findViewById(android.R.id.content);
         mLandScapeContainer.removeView(mTextureView);
         contentView.removeView(mLandScapeContainer);
-        ViewGroup.LayoutParams lp = new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.MATCH_PARENT);
+        FrameLayout.LayoutParams lp = new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
+                FrameLayout.LayoutParams.MATCH_PARENT, Gravity.CENTER);
         mPortraitContainer.addView(mTextureView, 0, lp);
         mFlPlayer.addView(mPortraitContainer, lp);
         mMode = MODE_NORMAL;
+    }
+
+    @Override
+    public void onVideoSizeChanged(final int width, final int height, int unappliedRotationDegrees, float pixelWidthHeightRatio) {
+        if (mTextureView != null) {
+            mTextureView.post(new Runnable() {
+                @Override
+                public void run() {
+                    mTextureView.adaptVideoSize(width, height);
+                }
+            });
+        }
+    }
+
+    @Override
+    public void onRenderedFirstFrame() {
+
     }
 }
